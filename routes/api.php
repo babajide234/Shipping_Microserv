@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ShippingController;
+use App\Http\Controllers\RatesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,4 +20,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/', [ShippingController::class,'index'])->name('list');
+Route::get('/', [ShippingController::class,'fetch']);
+Route::resource('rates', RatesController::class);
