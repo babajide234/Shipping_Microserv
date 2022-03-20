@@ -16,7 +16,7 @@ jobs:
         php-version: '7.4'
     - uses: actions/checkout@v2
     - name: Install Composer Dependencies
-      run: composer install --prefer-dist --no-dev --no-interaction
+      run: composer install --ignore-platform-reqs
     - name: Create deployment artifact
       run: tar -czf app.tar.gz --exclude=*.git --exclude=node_modules --exclude=tests *
     - name: Copy .env
