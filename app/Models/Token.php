@@ -10,6 +10,7 @@ class Token extends Model
     use HasFactory;
     protected $table =  'tokens';
     protected $primaryKey = 'id';
+    public $timestamps = false;
 
     protected $fillable = [
         'access_token',

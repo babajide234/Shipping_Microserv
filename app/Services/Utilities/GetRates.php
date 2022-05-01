@@ -12,6 +12,7 @@ use App\Models\shiping_rate_zone;
 use App\Models\third_country;
 use App\Models\dhl_domestic_zone_matrix;
 use App\Models\dhl_domestic_zone;
+use App\Models\Token;
 
 
 
@@ -27,8 +28,15 @@ class GetRates implements BaseServiceInterface{
 
     public function run()
     {
+        if(empty($this->params)){
+            return [
+                'status'=> false,
+                'message'=> 'Empty parameters ',
+                'data'=> []
+            ];
+        }
+        // dd($this->getFedEx());
         if($this->params['type'] == 'domestic'){
-            // $fedex = $this->getFedEx();
             $dhl = $this->getDhlDomestic();
             $fedex = $this->getFedEx()[0]->TotalAmount;
             $gigm = $this->getGigm();
@@ -84,15 +92,23 @@ class GetRates implements BaseServiceInterface{
         $destination='';
 
         if(strtoupper($this->params['to']) === 'LAGOS' ){
+        
             $destination = 'LAGOS MAINLAND';
+        
         }else{
+            
             $destination = strtoupper($this->params['to']);
+        
         }
 
         if(strtoupper($this->params['from']) === 'LAGOS'){
+            
             $origin = 'LAGOS MAINLAND';
+
         }else{
+
             $origin = strtoupper($this->params['from']);
+
         }
         $req = [
             "Origin" => $origin ,
@@ -104,14 +120,27 @@ class GetRates implements BaseServiceInterface{
         $response = new HttpRequest($url, $baseUrl,$req);
         
         $response = $response->run();
-        return json_decode($response->getBody());
-
+        // return json_decode($response->getBody());
+        // return $response;
         if(!$response){
             return response()->json(['status' => false, 'message' => 'Server Error'], 500);
         }else{
 
             if($response->getStatusCode() == 401){
-                return json_decode($response->getBody())->Message;
+                
+                // $response->reAuth();
+                $req = [
+                    "Origin" => $origin ,
+                    "Destination" => $destination ,
+                    "Weight" => $this->params['package']['weight'],
+                    "PickupType" => "1"
+                ];
+                $res = new HttpRequest($url, $baseUrl,$req);
+                $res->reAuth();
+                // return $req;
+                $response = new HttpRequest($url, $baseUrl,$req);
+                $response = $response->run();
+                return  json_decode($response->body());
             }
 
             if($response->getStatusCode() == 200){
@@ -142,4 +171,7 @@ class GetRates implements BaseServiceInterface{
         //return price
         return $zoneprice;
     }
+
+
+
 }
