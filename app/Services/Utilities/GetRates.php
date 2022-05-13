@@ -44,17 +44,37 @@ class GetRates implements BaseServiceInterface{
 
         if($this->params['type'] == 'international'){
             $dhl = $this->getDhl();
-            $fedex = 'Not Available';
-            $gigm = 'Not Available';
         }
-       
-        return [
-            'status'=> true,
-            'data'=> [
+        
+        $data =[];
+
+        if($dhl == null){
+            $data = [
+                'fedex' => $fedex,
+                'gigm' => $gigm,
+            ];
+        } elseif ($fedex == null) {
+            $data = [
+                'dhl' => $dhl,
+                'gigm' => $gigm,
+            ];
+        } elseif ($gigm == null) {
+            $data = [
+                'dhl' => $dhl,
+                'fedex' => $fedex,
+            ];
+        } else{
+            $data = [
                 'dhl' => $dhl,
                 'fedex' => $fedex,
                 'gigm' => $gigm,
-            ]
+            ];
+
+        }
+
+        return [
+            'status'=> true,
+            'data'=> $data
         ];
     }
 
@@ -67,6 +87,7 @@ class GetRates implements BaseServiceInterface{
         $zonePrice = dhl_zone_price::where('kg', $this->params['package']['weight'])->first();
         return $zonePrice[$table];
     }
+
     public function getDhlDomestic()
     {
         if($this->params['origin'] !== "NG"){
@@ -79,7 +100,12 @@ class GetRates implements BaseServiceInterface{
         $destinationZone = dhl_domestic_zone_matrix::where('zone', $origin )->first()->$destination;
         $table = 'Zone_'.$destinationZone;
         // Get zone price
-        $zonePrice = dhl_domestic_zone::where('kg', $this->params['package']['weight'])->first()->$table;
+        if($this->params['package']['weight'] >= '30'){
+            $weight = ceil($this->params['package']['weight'] / 10)*10;
+        }else{
+            $weight = $this->params['package']['weight'];
+        }
+        $zonePrice = dhl_domestic_zone::where('kg', $weight)->first()->$table;
         return (float)$zonePrice;
     }
 
