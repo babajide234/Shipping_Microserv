@@ -36,19 +36,30 @@ class GetRates implements BaseServiceInterface{
             ];
         }
         // dd($this->getFedEx());
+        $dhl = null;
+        $fedex = null;
+        $gigm = null;
+
+        if($this->params['type'] == 'international'){
+            $dhl = $this->getDhl();
+            $fedex = null;
+            $gigm = null;
+        }
+
         if($this->params['type'] == 'domestic'){
             $dhl = $this->getDhlDomestic();
             $fedex = $this->getFedEx()[0]->TotalAmount;
             $gigm = $this->getGigm();
         }
 
-        if($this->params['type'] == 'international'){
-            $dhl = $this->getDhl();
-        }
         
         $data =[];
 
-        if($dhl == null){
+        if($fedex == null && $gigm == null){
+            $data = [
+                'dhl' => $dhl,
+            ];
+        } elseif ($dhl == null) {
             $data = [
                 'fedex' => $fedex,
                 'gigm' => $gigm,
@@ -84,7 +95,9 @@ class GetRates implements BaseServiceInterface{
         $zone = country_dhl::where('iso', $this->params['origin'])->first()->zone;
         // Get zone price
         $table = 'Zone_'.$zone;
-        $zonePrice = dhl_zone_price::where('kg', $this->params['package']['weight'])->first();
+        $kg = ceil($this->params['package']['weight'] / 10)*10;
+        $zonePrice = dhl_zone_price::where('kg', $kg)->first();
+        // return $zonePrice; 
         return $zonePrice[$table];
     }
 
